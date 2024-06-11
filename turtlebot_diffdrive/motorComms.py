@@ -2,7 +2,7 @@ import serial
 import time
 import struct
 from serial.tools import list_ports
-from turtlebot_diffdrive.configuration import *
+from configuration import *
 
 class MotorMessage:
     def __init__(self):
@@ -54,7 +54,7 @@ class MotorController:
 
         # Packing velocity into 4 bytes
         data[3:7] = struct.pack('f', left_wheel_vel)  # velocity x
-        data[7:11] = right_wheel_vel # velocity y (not neccesary for diff-drive)
+        data[7:11] = struct.pack('f', right_wheel_vel) # velocity y (not neccesary for diff-drive)
         checksum = self.calculate_transmit_checksum(data)
         data[SIZE_OF_RX_DATA - 2] = checksum
         data[SIZE_OF_RX_DATA - 1] = TAIL
@@ -83,6 +83,10 @@ def main():
     esp = MotorController()
     motorMessage = MotorMessage()
     connect_bool = esp.initHandshake()
+    ports = esp.scan_devices()
+    print("select port (0-n): %s",ports)
+    portSelect = int(input())
+    esp.initHandshake(ports[portSelect])
     if not connect_bool: 
         print("[motorComms] Error opening serial port!")
     else: 
@@ -91,18 +95,11 @@ def main():
     try:
         while True:
             speed = float(input("Enter speed: "))
-            esp.send_velocity_command(speed, 0)
+            esp.send_velocity_command(speed, speed)
             esp.read_serial_data(motorMessage)
-            print(f"[motorComms] Linear Vel: {motorMessage.velocity_x}")
-            print(f"[motorComms] Angular Vel: {motorMessage.velocity_angular}\n")
-            # for i in range(10):
-            #     start_time = time.time()
-            #     while time.time() - start_time < 10:
-            #         esp.send_velocity_command(i * 0.05, 0)
-            #         esp.read_serial_data(motorMessage)
-            #         print(f"Linear Vel: {motorMessage.velocity_x}")
-            #         print(f"Angular Vel: {motorMessage.velocity_angular}\n")
-            #         time.sleep(0.1)
+            print(f"[motorComms] Left_wheel_vel: {motorMessage.left_wheel_vel}")
+            print(f"[motorComms] Right_wheel_vel Vel: {motorMessage.right_wheel_vel}\n")
+
     except KeyboardInterrupt:
         esp.shutdown()
         print("[motorComms] Program stopped by user")
