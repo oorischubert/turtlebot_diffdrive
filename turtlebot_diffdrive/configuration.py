@@ -3,7 +3,8 @@
 # Constants for communication protocol
 HEADER = 200
 TAIL = 199
-SIZE_OF_RX_DATA = 17
+SIZE_OF_RX_DATA = 13
+SIZE_OF_TX_DATA = 24
 VELOCITY_MODE = 1  
 
 # Serial port configuration
